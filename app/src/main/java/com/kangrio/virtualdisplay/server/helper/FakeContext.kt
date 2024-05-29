@@ -13,7 +13,6 @@ class FakeContext private constructor() : MutableContextWrapper(null) {
     companion object {
         const val PACKAGE_NAME: String = "com.android.shell"
         const val ROOT_UID: Int = 0 // Like android.os.Process.ROOT_UID, but before API 29
-        private lateinit var context: Context
 
         @SuppressLint("StaticFieldLeak")
         private val INSTANCE = FakeContext()
@@ -21,17 +20,18 @@ class FakeContext private constructor() : MutableContextWrapper(null) {
         fun get(): FakeContext {
             return INSTANCE
         }
+    }
 
-        fun setContext(con: Context) {
-            context = con
-        }
+    override fun getUserId(): Int {
+        return 0
+    }
+
+    override fun setBaseContext(base: Context?) {
+        super.setBaseContext(base)
     }
 
     override fun getDisplayId(): Int {
         return 0
-    }
-
-    override fun enforceCallingOrSelfPermission(permission: String?, message: String?) {
     }
 
     override fun getPackageName(): String {

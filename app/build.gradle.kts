@@ -15,6 +15,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig = signingConfigs.getByName("debug")
     }
 
     buildTypes {
@@ -24,6 +25,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -35,13 +37,13 @@ android {
     }
     buildFeatures {
         buildConfig = true
-        aidl = true
     }
 }
 
 dependencies {
 
-    val shizuku_version = "13.1.4"
+//    val shizuku_version = "13.1.5"
+    val shizuku_version = "13.1.0"
     implementation ("dev.rikka.shizuku:api:$shizuku_version")
 
 // Add this line if you want to support Shizuku
