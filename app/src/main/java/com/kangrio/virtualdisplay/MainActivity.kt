@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.graphics.SurfaceTexture
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.os.Build
@@ -12,8 +13,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.view.Surface
-import android.view.SurfaceHolder
-import android.view.SurfaceView
+import android.view.TextureView
+import android.view.TextureView.SurfaceTextureListener
 import android.view.View
 import android.widget.AdapterView
 import android.widget.AdapterView.OnItemClickListener
@@ -46,7 +47,9 @@ class MainActivity : AppCompatActivity() {
 
     private val handler = App.handler
 
-    var surfaceView: SurfaceView? = null
+    private var textureView: TextureView? = null
+    var surface: Surface? = null
+    private var surfaceCreated = false
 
     private var spinner: Spinner? = null
 
@@ -67,7 +70,10 @@ class MainActivity : AppCompatActivity() {
         val granted = grantResult == PackageManager.PERMISSION_GRANTED
         Log.d(TAG, "onRequestPermissionsResult: $granted")
         if (granted) {
-            createSurface()
+            handler.post {
+
+                createTextureView()
+            }
         }
     }
 
@@ -90,13 +96,15 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER)
+
         displayManager = DisplayManager(this)
 
         btnStartApp = findViewById(R.id.btnStartApp)
         btnKillApp = findViewById(R.id.btnKillApp)
         editText = findViewById(R.id.editTextText)
 
-        surfaceView = findViewById(R.id.surfaceView)
+        textureView = findViewById(R.id.textureView);
         spinner = findViewById(R.id.planets_spinner)
 
         tvDisplayId = findViewById(R.id.tvDisplayId)
@@ -106,7 +114,7 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             if (checkPermission(1)) {
                 handler.postDelayed({
-                    createSurface()
+                    createTextureView()
                 }, 500L)
             }
         } else {
@@ -136,7 +144,8 @@ class MainActivity : AppCompatActivity() {
         handler.post {
             for (packageInfo in apps) {
                 try {
-                    installedApps[packageInfo.loadLabel(pm).toString()] = packageInfo.activityInfo.packageName
+                    installedApps[packageInfo.loadLabel(pm).toString()] =
+                        packageInfo.activityInfo.packageName
                 } catch (e: Throwable) {
                     e.printStackTrace()
                 }
@@ -192,6 +201,17 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume: ")
+        if (surface != null && surface!!.isValid) {
+            createOrUpdateVirtualDisplay()
+        } else {
+            val surfaceTexture = textureView!!.surfaceTexture
+            if (surfaceTexture != null) {
+                surface = Surface(surfaceTexture)
+                createOrUpdateVirtualDisplay()
+            } else {
+                // Wait for the onSurfaceTextureAvailable callback to handle this
+            }
+        }
     }
 
     @SuppressLint("WrongConstant", "ServiceCast")
@@ -261,42 +281,75 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    fun createSurface() {
-        surfaceView!!.visibility = View.VISIBLE
+    private fun createTextureView() {
+        val width = resources.displayMetrics.widthPixels
+        var height = resources.displayMetrics.heightPixels
+        Log.d(TAG, "createTextureView: width = $width, height = $height")
 
 
-        val holder = surfaceView!!.holder
-
-        holder.addCallback(object : SurfaceHolder.Callback {
-            override fun surfaceCreated(holder: SurfaceHolder?) {
-                Log.d(TAG, "surfaceCreated: ${holder!!.surface.isValid}")
-                virtualDisplay = displayUtils.createVirtualDisplay(
-                    this@MainActivity,
-                    holder.surface,
-                    surfaceView!!.width,
-                    surfaceView!!.height
-                )
-                if (lastOpenedApp.isNotEmpty()) {
-                    launchAppsTargetDisplay(lastOpenedApp, virtualDisplay!!.display.displayId)
-                }
-            }
-
-            override fun surfaceChanged(
-                holder: SurfaceHolder?, format: Int, width: Int, height: Int
+        textureView!!.visibility = View.VISIBLE
+        Log.d(
+            TAG,
+            "createTextureView: HardwareAccelerated = ${textureView!!.isHardwareAccelerated}"
+        )
+        textureView!!.surfaceTextureListener = object : SurfaceTextureListener {
+            override fun onSurfaceTextureAvailable(
+                surfaceTexture: SurfaceTexture,
+                width: Int,
+                height: Int
             ) {
-                Log.d(TAG, "surfaceChanged: ${holder!!.surface.isValid}")
+                Log.d(TAG, "onSurfaceTextureAvailable: ")
+                surface = Surface(surfaceTexture)
+                surfaceCreated = true
+                createOrUpdateVirtualDisplay()
+                launchAppsTargetDisplay(testPackage, virtualDisplay!!.display.displayId)
             }
 
-            override fun surfaceDestroyed(holder: SurfaceHolder?) {
-                virtualDisplay!!.release()
-                Log.d(TAG, "surfaceDestroyed: ${holder!!.surface.isValid}")
+            override fun onSurfaceTextureSizeChanged(
+                surfaceTexture: SurfaceTexture,
+                width: Int,
+                height: Int
+            ) {
+                Log.d(TAG, "onSurfaceTextureSizeChanged: ")
+                // Handle surface size changes if necessary
             }
-        })
 
-        surfaceView!!.setOnTouchListener { view, motionEvent ->
+            override fun onSurfaceTextureDestroyed(surfaceTexture: SurfaceTexture): Boolean {
+                Log.d(TAG, "onSurfaceTextureDestroyed: ")
+                surfaceCreated = false
+                // Optionally handle surface destruction, but do not release VirtualDisplay
+                return true
+            }
+
+            override fun onSurfaceTextureUpdated(surfaceTexture: SurfaceTexture) {
+                // Handle surface updates if necessary
+            }
+        }
+
+        textureView!!.setOnTouchListener { view, motionEvent ->
             motionEvent.displayId = virtualDisplay!!.display.displayId
             sendMotionEvent(motionEvent)
             true
+        }
+    }
+
+    private fun createOrUpdateVirtualDisplay() {
+        if (surfaceCreated) {
+            if (virtualDisplay == null || !virtualDisplay!!.display.isValid) {
+                virtualDisplay = displayUtils!!.createVirtualDisplay(
+                    this,
+                    surface,
+                    textureView!!.width,
+                    textureView!!.height
+                )
+            } else {
+                // Update the surface if it's already created
+                Log.d(
+                    TAG,
+                    "createOrUpdateVirtualDisplay: Update the surface if it's already created"
+                )
+                virtualDisplay!!.surface = surface
+            }
         }
     }
 

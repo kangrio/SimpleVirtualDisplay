@@ -27,7 +27,7 @@ class DisplayUtils {
     fun sendMotionEvent(motionEvent: MotionEvent) {
         iInputManager.injectInputEvent(
             motionEvent,
-            InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH
+            InputManager.INJECT_INPUT_EVENT_MODE_ASYNC
         )
     }
 
@@ -72,7 +72,8 @@ class DisplayUtils {
 
 
         handler.post {
-            MainActivity.tvDisplayId!!.text = displayId.toString()
+            MainActivity.tvDisplayId!!.text =
+                "Display Size: ${displayManager!!.displays.size} Id: $displayId"
         }
         return virtualDisplay as VirtualDisplay
     }

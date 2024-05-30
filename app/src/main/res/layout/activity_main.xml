@@ -7,66 +7,70 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <SurfaceView
-        android:id="@+id/surfaceView"
-        android:layout_width="640dp"
-        android:layout_height="360dp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/editTextText"
-        android:layout_width="413dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="52dp"
-        android:ems="10"
-        android:inputType="text"
-        android:text="bin.mt.plus"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/surfaceView" />
-
-    <Spinner
-        android:id="@+id/planets_spinner"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextText" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/planets_spinner">
-
-
-        <Button
-            android:id="@+id/btnStartApp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Start App" />
-
-        <Button
-            android:id="@+id/btnKillApp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:text="Kill App" />
-
-    </LinearLayout>
-
-
-    <TextView
-        android:id="@+id/tvDisplayId"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Display Id: "
+        android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextureView
+            android:id="@+id/textureView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="invisible" />
+
+
+        <EditText
+            android:visibility="invisible"
+            android:id="@+id/editTextText"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom|center"
+            android:inputType="text"
+            android:layout_marginBottom="150dp"
+            android:text="bin.mt.plus"
+
+            />
+
+        <Spinner
+            android:id="@+id/planets_spinner"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|right"
+            android:layout_marginBottom="100dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_gravity="bottom|right"
+            android:layout_marginBottom="50dp">
+
+
+            <Button
+                android:id="@+id/btnStartApp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start App" />
+
+            <Button
+                android:id="@+id/btnKillApp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="Kill App" />
+
+        </LinearLayout>
+
+
+        <TextView
+            android:layout_gravity="bottom|right"
+            android:id="@+id/tvDisplayId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Display Id: " />
+    </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
